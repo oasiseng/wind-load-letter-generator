@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wind Load Letter Generator — ASCE 7-22</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#1a5c4c;
+    --green-dark:#13463a;
+    --bg:#f5f3ef;
+    --surface:#ffffff;
+    --text:#1a1714;
+    --muted:#5c5955;
+    --border:#e2dfd8;
+    --error:#d93025;
+    --font-body:'Plus Jakarta Sans',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-body);
+    color:var(--text);
+    background:var(--bg);
+    line-height:1.5;
+  }
+
+  /* ============= SCREEN LAYOUT ============= */
+  .app{
+    display:grid;
+    grid-template-columns:minmax(420px,480px) 1fr;
+    gap:0;
+    min-height:100vh;
+  }
+  .form-panel{
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    padding:1.5rem;
+    overflow-y:auto;
+    max-height:100vh;
+    position:sticky;
+    top:0;
+  }
+  .preview-panel{
+    padding:2rem 1rem;
+    background:linear-gradient(180deg,#e8e6df 0%,#f5f3ef 100%);
+    overflow-x:auto;
+  }
+  .form-panel h1{
+    color:var(--green);
+    font-size:1.25rem;
+    margin:0 0 0.25rem;
+  }
+  .form-panel .subtitle{
+    font-size:0.8rem;
+    color:var(--muted);
+    margin:0 0 1.5rem;
+    font-family:var(--font-mono);
+  }
+  fieldset{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:0.85rem 1rem 1rem;
+    margin:0 0 1rem;
+    background:#faf9f7;
+  }
+  fieldset legend{
+    font-weight:700;
+    color:var(--green);
+    font-size:0.85rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    padding:0 0.4rem;
+  }
+  .field{margin-bottom:0.7rem;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;
+    font-weight:600;
+    font-size:0.82rem;
+    margin-bottom:0.25rem;
+  }
+  .field input,.field select,.field textarea{
+    width:100%;
+    padding:0.5rem 0.7rem;
+    border:1.5px solid var(--border);
+    border-radius:6px;
+    font-family:var(--font-mono);
+    font-size:0.85rem;
+    background:#fff;
+    color:var(--text);
+    transition:border-color 0.15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;
+    border-color:var(--green);
+    box-shadow:0 0 0 3px rgba(26,92,76,0.12);
+  }
+  .field textarea{font-family:var(--font-body);font-size:0.85rem;resize:vertical;min-height:60px;}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;}
+  .actions{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(180deg,transparent 0%,var(--surface) 30%);
+    padding:1rem 0 0.5rem;
+    display:flex;
+    gap:0.5rem;
+    margin-top:1rem;
+  }
+  .btn{
+    flex:1;
+    padding:0.7rem 1rem;
+    border:none;
+    border-radius:6px;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:0.9rem;
+    cursor:pointer;
+    transition:background 0.15s,transform 0.05s;
+  }
+  .btn-primary{background:var(--green);color:#fff;}
+  .btn-primary:hover{background:var(--green-dark);}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-secondary{background:#fff;border:1.5px solid var(--border);color:var(--text);}
+  .btn-secondary:hover{border-color:var(--green);color:var(--green);}
+  .product-block{
+    border:1px dashed var(--border);
+    border-radius:6px;
+    padding:0.6rem;
+    margin-bottom:0.6rem;
+    background:#fff;
+  }
+  .product-block-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:0.4rem;
+  }
+  .product-block-header strong{font-size:0.8rem;color:var(--green);}
+  .btn-mini{
+    background:transparent;border:1px solid var(--border);
+    border-radius:4px;padding:0.15rem 0.5rem;
+    font-size:0.75rem;cursor:pointer;color:var(--muted);
+  }
+  .btn-mini:hover{border-color:var(--error);color:var(--error);}
+  .add-product{
+    width:100%;padding:0.5rem;border:1px dashed var(--border);
+    background:transparent;border-radius:6px;cursor:pointer;
+    color:var(--muted);font-family:var(--font-body);font-size:0.85rem;
+  }
+  .add-product:hover{border-color:var(--green);color:var(--green);}
+  .file-drop{
+    border:1px dashed var(--border);
+    border-radius:6px;
+    padding:0.5rem;
+    font-size:0.8rem;
+    color:var(--muted);
+  }
+  .file-drop img{
+    max-width:100%;
+    max-height:120px;
+    display:block;
+    margin-top:0.4rem;
+    border-radius:4px;
+  }
+  .live-result{
+    background:rgba(26,92,76,0.06);
+    border:1px solid rgba(26,92,76,0.2);
+    border-radius:6px;
+    padding:0.5rem 0.7rem;
+    margin-bottom:0.5rem;
+    font-family:var(--font-mono);
+    font-size:0.78rem;
+    color:var(--text);
+  }
+  .live-result strong{color:var(--green);}
+  .checkbox-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.3rem 0.7rem;
+    margin-bottom:0.6rem;
+  }
+  .checkbox-grid label{
+    display:flex;
+    align-items:center;
+    gap:0.4rem;
+    font-size:0.82rem;
+    font-weight:500;
+    cursor:pointer;
+    margin:0;
+  }
+  .checkbox-grid input[type="checkbox"]{
+    margin:0;
+    cursor:pointer;
+    accent-color:var(--green);
+  }
+  .hint{
+    color:var(--muted);
+    font-weight:400;
+    font-size:0.75rem;
+  }
+
+  /* ============= LETTER PREVIEW ============= */
+  .letter{
+    max-width:8.5in;
+    margin:0 auto;
+  }
+  .letter-page{
+    background:#fff;
+    width:8.5in;
+    min-height:11in;
+    padding:0.8in 0.85in 1.2in;
+    margin:0 auto 1.5rem;
+    box-shadow:0 6px 24px rgba(0,0,0,0.08);
+    position:relative;
+    font-size:11pt;
+    line-height:1.4;
+    color:#1a1714;
+  }
+  .letter-page h1{
+    color:var(--green);
+    font-size:18pt;
+    margin:0 0 0.2rem;
+    font-weight:700;
+  }
+  .letter-page h2{
+    color:var(--green);
+    font-size:14pt;
+    margin:1.4rem 0 0.5rem;
+    font-weight:700;
+    border-bottom:1px solid #ccc;
+    padding-bottom:0.25rem;
+  }
+  .letter-page h3{
+    font-size:11pt;
+    margin:0.8rem 0 0.4rem;
+    font-weight:700;
+    color:var(--green);
+    text-decoration:underline;
+  }
+  .letter-page p{margin:0 0 0.6rem;text-align:justify;}
+  .letter-page .indent{text-indent:0.5in;}
+  .letter-page ul,.letter-page ol{margin:0.4rem 0 0.6rem;padding-left:1.4rem;}
+  .letter-page li{margin-bottom:0.25rem;}
+  .header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:1rem;
+  }
+  .header-row .left{font-weight:700;}
+  .header-row .right{text-align:right;font-style:italic;color:#444;}
+  .img-frame{
+    text-align:center;
+    margin:0.8rem 0;
+  }
+  .img-frame img{
+    max-width:80%;
+    max-height:4in;
+    border:1px solid #ccc;
+  }
+  .img-frame .caption{
+    font-size:9pt;
+    color:#444;
+    margin-top:0.3rem;
+    font-style:italic;
+  }
+  .img-frame.placeholder{
+    border:2px dashed #ccc;
+    height:3.2in;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f9f8f5;
+    color:#999;
+    font-style:italic;
+  }
+  .pressure-summary{
+    background:#f7f6f2;
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:0.7rem 1rem;
+    margin:0.8rem 0;
+  }
+  .pressure-summary .row{
+    display:flex;
+    justify-content:space-between;
+    padding:0.15rem 0;
+    font-family:var(--font-mono);
+    font-size:10.5pt;
+  }
+  .pressure-summary .row.headline{
+    font-weight:700;
+    color:var(--green);
+    font-size:11pt;
+    border-top:1px solid #ccc;
+    padding-top:0.35rem;
+    margin-top:0.3rem;
+  }
+  .calc-table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--font-mono);
+    font-size:9pt;
+    margin:0.5rem 0 0.8rem;
+  }
+  .calc-table th,.calc-table td{
+    border:1px solid #999;
+    padding:0.25rem 0.4rem;
+    text-align:right;
+  }
+  .calc-table th{
+    background:var(--green);
+    color:#fff;
+    font-weight:700;
+    text-align:center;
+  }
+  .calc-table td:first-child{text-align:left;font-weight:600;}
+  .calc-step{
+    font-family:var(--font-mono);
+    font-size:9.5pt;
+    background:#f7f6f2;
+    border-left:3px solid var(--green);
+    padding:0.5rem 0.7rem;
+    margin:0.4rem 0;
+  }
+  .calc-step .label{color:var(--green);font-weight:700;}
+  .signature-block{
+    margin-top:2rem;
+  }
+  .signature-block .sig-line{
+    border-bottom:1px solid #333;
+    width:3in;
+    height:0.6in;
+    margin-bottom:0.25rem;
+  }
+  .signature-block .stamp-placeholder{
+    border:2px dashed #aaa;
+    width:2in;
+    height:2in;
+    display:inline-block;
+    margin:0.4rem 0 0;
+    vertical-align:middle;
+    text-align:center;
+    line-height:2in;
+    color:#aaa;
+    font-style:italic;
+    font-size:9pt;
+  }
+  .exhibit-cover{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:9in;
+  }
+  .exhibit-cover h2{
+    font-size:32pt;
+    border:none;
+    color:var(--green);
+    text-align:center;
+  }
+
+  /* Decorative footer swoosh - reproduces the brand element */
+  .page-footer{
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    height:0.9in;
+    padding:0 0.85in 0.35in;
+  }
+  .page-footer .footer-text{
+    display:flex;
+    justify-content:space-between;
+    font-size:8.5pt;
+    color:#222;
+    border-bottom:0;
+    margin-bottom:0.15rem;
+  }
+  .page-footer .footer-text .left{font-weight:600;}
+  .page-footer .footer-text .right{text-align:right;font-style:italic;}
+  .page-footer .footer-text .right strong{font-style:normal;font-weight:600;}
+  .page-footer .swoosh{
+    width:100%;
+    height:0.4in;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 50' preserveAspectRatio='none'><path d='M0,25 Q200,5 400,25 T800,25' stroke='%237fa8c5' stroke-width='1.2' fill='none' opacity='0.6'/><path d='M0,30 Q200,12 400,30 T800,30' stroke='%237fa8c5' stroke-width='1.2' fill='none' opacity='0.45'/><path d='M0,35 Q200,18 400,35 T800,35' stroke='%23a8c5db' stroke-width='1' fill='none' opacity='0.4'/></svg>") no-repeat center / 100% 100%;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:4rem 2rem;
+    color:var(--muted);
+    font-style:italic;
+  }
+
+  /* ============= PRINT ============= */
+  @page{
+    size:letter;
+    margin:0;
+  }
+  @media print{
+    body{
+      background:#fff;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
+    }
+    .form-panel{display:none;}
+    .preview-panel{
+      padding:0;
+      background:#fff;
+      overflow:visible;
+    }
+    .app{display:block;}
+    .letter-page{
+      box-shadow:none;
+      margin:0;
+      page-break-after:always;
+      page-break-inside:avoid;
+      break-inside:avoid;
+      width:8.5in;
+      height:11in;
+      min-height:11in;
+      max-height:11in;
+      overflow:hidden;
+    }
+    .letter-page:last-child{page-break-after:auto;}
+    /* Force the brand swoosh + footer background to actually print
+       (Chrome/Edge skip backgrounds unless this is set) */
+    .page-footer,
+    .page-footer .swoosh,
+    .page-footer .footer-text{
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+    }
+    /* Calc-detail pages need tighter vertical rhythm so steps fit cleanly */
+    .calc-detail h3{margin:0.5rem 0 0.25rem;}
+    .calc-detail .calc-step{margin:0.25rem 0;padding:0.4rem 0.6rem;}
+    .calc-detail table.calc-table{margin:0.4rem 0;}
+    .no-print{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ============= FORM PANEL ============= -->
+<aside class="form-panel">
+  <h1>Wind Load Letter Generator</h1>
+  <p class="subtitle">ASCE 7-22 · Components &amp; Cladding · v1.0</p>
+
+  <div class="live-result" id="liveResult">
+    Fill in V, h, exposure, area &amp; theta to see live pressures.
+  </div>
+
+  <fieldset>
+    <legend>Letter / Recipient</legend>
+    <div class="field">
+      <label>Letter date</label>
+      <input type="date" id="f_date">
+    </div>
+    <div class="field">
+      <label>Building dept (recipient)</label>
+      <input type="text" id="f_dept" placeholder="City of [City] Building Department">
+    </div>
+    <div class="field">
+      <label>Building dept address</label>
+      <input type="text" id="f_deptAddr" placeholder="[Department mailing address]">
+    </div>
+    <div class="field">
+      <label>RE: subject line</label>
+      <input type="text" id="f_subject" placeholder="Window Wind Pressure Calculations">
+    </div>
+    <div class="field">
+      <label>Site address</label>
+      <input type="text" id="f_site" placeholder="[Project site address]">
+    </div>
+    <div class="field">
+      <label>Client / customer</label>
+      <input type="text" id="f_client" placeholder="[Contractor or homeowner name]">
+    </div>
+    <div class="field">
+      <label>Project description (free text)</label>
+      <textarea id="f_desc" rows="3" placeholder="Replacement of exterior windows at single-story single-family residence. Configuration per submitted product information."></textarea>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Project Scope / System Types</legend>
+    <p style="font-size:0.75rem;color:var(--muted);margin:0 0 0.5rem;">Drives the descriptive phrases throughout the letter. Check all that apply. <strong>v1.0 scope:</strong> wall-mounted fenestration on single-story residential buildings only.</p>
+    <div class="checkbox-grid" id="sysTypeGrid">
+      <label><input type="checkbox" id="sys_windows" checked> Windows</label>
+      <label><input type="checkbox" id="sys_entrance_doors"> Entrance Doors</label>
+      <label><input type="checkbox" id="sys_storefront"> Storefront / Sidelite</label>
+      <label><input type="checkbox" id="sys_sliding_doors"> Sliding Glass Doors</label>
+      <label><input type="checkbox" id="sys_curtain_wall"> Curtain Wall</label>
+      <label><input type="checkbox" id="sys_louvers"> Louvers</label>
+      <label><input type="checkbox" id="sys_garage_doors"> Garage Doors</label>
+      <label><input type="checkbox" id="sys_shutters"> Hurricane Shutters</label>
+    </div>
+    <div class="field">
+      <label>Custom noun-phrase override <span class="hint">(optional; leave blank to build from checkboxes)</span></label>
+      <input type="text" id="f_sysCustom" placeholder='e.g. "impact-rated window" or "aluminum entrance door"'>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Wind Parameters (ASCE 7-22)</legend>
+    <div class="row-3">
+      <div class="field">
+        <label>V (mph)</label>
+        <input type="number" id="f_V" value="160" step="1">
+      </div>
+      <div class="field">
+        <label>Risk Cat</label>
+        <select id="f_risk">
+          <option>I</option><option selected>II</option><option>III</option><option>IV</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Exposure</label>
+        <select id="f_exp">
+          <option value="B">B</option>
+          <option value="C" selected>C</option>
+          <option value="D">D</option>
+        </select>
+      </div>
+    </div>
+    <div class="row-3">
+      <div class="field">
+        <label>h (ft)</label>
+        <input type="number" id="f_h" value="30" step="0.1">
+      </div>
+      <div class="field">
+        <label>θ (deg)</label>
+        <input type="number" id="f_theta" value="5" step="0.1">
+      </div>
+      <div class="field">
+        <label>EWA (sqft)</label>
+        <input type="number" id="f_A" value="50" step="0.1">
+      </div>
+    </div>
+    <div class="row-3">
+      <div class="field">
+        <label>Kzt</label>
+        <input type="number" id="f_Kzt" value="1.0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Ke</label>
+        <input type="number" id="f_Ke" value="1.0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Kd</label>
+        <input type="number" id="f_Kd" value="0.85" step="0.01">
+      </div>
+    </div>
+    <div class="field">
+      <label>Enclosure</label>
+      <select id="f_encl">
+        <option value="enclosed" selected>Enclosed (GCpi=±0.18)</option>
+        <option value="partially_enclosed">Partially enclosed (±0.55)</option>
+        <option value="open">Open (0.00)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Reported wall zone in letter</label>
+      <select id="f_zone">
+        <option value="4">Zone 4 (interior)</option>
+        <option value="5">Zone 5 (corners)</option>
+        <option value="both" selected>Both Zone 4 &amp; Zone 5</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Pressure reporting basis <span class="hint">(applies 0.6 factor to all reported site pressures if ASD)</span></label>
+      <select id="f_basis">
+        <option value="ASD" selected>ASD (allowable stress design)</option>
+        <option value="LRFD">LRFD / Strength (ultimate)</option>
+      </select>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Products (Florida Product Approval)</legend>
+    <div id="productList"></div>
+    <button type="button" class="add-product" onclick="addProduct()">+ Add product</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Engineer / Stamp</legend>
+    <div class="field">
+      <label>Engineer name</label>
+      <input type="text" id="f_engName" placeholder="[Engineer Name], PE">
+    </div>
+    <div class="field">
+      <label>State License #</label>
+      <input type="text" id="f_engLic" placeholder="[License No.]">
+    </div>
+    <div class="field">
+      <label>Firm name</label>
+      <input type="text" id="f_firm" placeholder="[Firm Name]">
+    </div>
+    <div class="field">
+      <label>Certificate of Authorization #</label>
+      <input type="text" id="f_coa" placeholder="[COA No.]">
+    </div>
+    <div class="field">
+      <label>Firm website</label>
+      <input type="text" id="f_web" placeholder="www.example.com">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Optional Images</legend>
+    <div class="field">
+      <label>Site / storefront photo</label>
+      <input type="file" id="f_img1" accept="image/*">
+      <div class="file-drop" id="img1Preview">No image. Will show placeholder.</div>
+    </div>
+    <div class="field">
+      <label>Site photo caption <span style="color:var(--muted);font-weight:400;font-size:0.75rem;">(leave blank for default)</span></label>
+      <input type="text" id="f_cap1" placeholder="Overview of Storefront Opening being replaced. Source: Google Maps">
+    </div>
+    <div class="field">
+      <label>Aerial / location image</label>
+      <input type="file" id="f_img2" accept="image/*">
+      <div class="file-drop" id="img2Preview">No image. Will show placeholder.</div>
+    </div>
+    <div class="field">
+      <label>Aerial photo caption <span style="color:var(--muted);font-weight:400;font-size:0.75rem;">(leave blank for default)</span></label>
+      <input type="text" id="f_cap2" placeholder="Aerial Location. Source: Google Maps">
+    </div>
+  </fieldset>
+
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="resetForm()">Reset</button>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>
+</aside>
+
+<!-- ============= PREVIEW PANEL ============= -->
+<main class="preview-panel">
+  <div class="letter" id="letter">
+    <div class="empty-state">Fill the form. The letter renders here in real time.</div>
+  </div>
+</main>
+
+</div>
+
+<script>
+// ===================================================================
+// ASCE 7-22 wind math — Components & Cladding, Chapter 30 Part 1
+// Reference check: V=160 mph, Exp C, h=30 ft, θ=4.76°, A=50 sf
+//   → Z4: +52.92 / -57.84,  Z5: +52.92 / -66.52  (strength level, psf)
+// ===================================================================
+const EXPOSURE={
+  B:{alpha:7.5, zg:3280, zmin:30},
+  C:{alpha:9.8, zg:2460, zmin:15},
+  D:{alpha:11.5,zg:1935, zmin:15}
+};
+const GCPI={enclosed:0.18, partially_enclosed:0.55, open:0.0};
+
+// ===================================================================
+// System-type phrase builder
+// Ordered list — the user's selection order in this list controls
+// the order they appear in the rendered phrase.
+// ===================================================================
+const SYSTEM_TYPES = [
+  { id:'sys_windows',        noun:'window' },
+  { id:'sys_entrance_doors', noun:'entrance door' },
+  { id:'sys_storefront',     noun:'storefront/sidelite' },
+  { id:'sys_sliding_doors',  noun:'sliding glass door' },
+  { id:'sys_curtain_wall',   noun:'curtain wall' },
+  { id:'sys_louvers',        noun:'louver' },
+  { id:'sys_garage_doors',   noun:'garage door' },
+  { id:'sys_shutters',       noun:'hurricane shutter' },
+];
+function getSysNouns(){
+  return SYSTEM_TYPES
+    .filter(t => document.getElementById(t.id) && document.getElementById(t.id).checked)
+    .map(t => t.noun);
+}
+// Oxford-comma join: ["a"] → "a"; ["a","b"] → "a and b"; ["a","b","c"] → "a, b, and c"
+function oxfordJoin(items){
+  if(items.length===0) return '';
+  if(items.length===1) return items[0];
+  if(items.length===2) return items[0]+' and '+items[1];
+  return items.slice(0,-1).join(', ')+', and '+items[items.length-1];
+}
+// Build the base noun phrase ("entrance door and storefront/sidelite", "window", etc.)
+// Honors the custom override if filled.
+function sysNounPhrase(customOverride){
+  const c = (customOverride||'').trim();
+  if(c) return c;
+  const nouns = getSysNouns();
+  if(nouns.length===0) return '[system type(s)]';
+  return oxfordJoin(nouns);
+}
+
+function Kz(z, exp){
+  const c=EXPOSURE[exp];
+  const zEff=Math.max(z, c.zmin);
+  return 2.41*Math.pow(zEff/c.zg, 2/c.alpha);
+}
+function interpGCp(area, v10, v500){
+  if(area<=10) return v10;
+  if(area>=500) return v500;
+  return v10 + (v500-v10)*(Math.log10(area)-1)/(Math.log10(500)-1);
+}
+function endZoneA(L, W, h){
+  const least=Math.min(L,W);
+  return Math.max(Math.min(0.1*least, 0.4*h), 0.04*least, 3);
+}
+
+// Compute all pressures for a given inputs object
+function computeWind(inp){
+  const Kh = Kz(inp.h, inp.exp);
+  const qh = 0.00256 * Kh * inp.Kzt * inp.Ke * inp.V*inp.V;
+  const Gi = GCPI[inp.encl];
+  const red = (inp.theta <= 10) ? 0.9 : 1.0;
+
+  function zonePressures(area){
+    let gcp_pos   = interpGCp(area,  1.0,  0.7) * red;
+    let gcp_negZ4 = interpGCp(area, -1.1, -0.8) * red;
+    let gcp_negZ5 = interpGCp(area, -1.4, -0.8) * red;
+    return {
+      gcp_pos, gcp_negZ4, gcp_negZ5,
+      p_pos    : qh * inp.Kd * (gcp_pos    + Gi),
+      p_negZ4  : qh * inp.Kd * (gcp_negZ4  - Gi),
+      p_negZ5  : qh * inp.Kd * (gcp_negZ5  - Gi)
+    };
+  }
+  return {
+    Kh, qh, Gi, red,
+    at:area=>zonePressures(area),
+    primary:zonePressures(inp.A),
+    table:[10,20,50,100,200,500].map(A=>({A, ...zonePressures(A)}))
+  };
+}
+
+// ===================================================================
+// PRODUCTS state
+// ===================================================================
+let products=[
+  {system:'Window System', mfr:'[Manufacturer]', model:'[Product Model]', fl:'[FL Approval No.]', dp:'+45/-55 psf', loadBasis:'ASD'}
+];
+let img1Data=null, img2Data=null;
+// Default captions used when the user leaves the caption field blank
+const DEFAULT_CAPTION_1 = 'Overview of Storefront Opening being replaced. Source: Google Maps';
+const DEFAULT_CAPTION_2 = 'Aerial Location. Source: Google Maps';
+
+function renderProducts(){
+  const list=document.getElementById('productList');
+  list.innerHTML='';
+  products.forEach((p,i)=>{
+    const basis = p.loadBasis || 'ASD';
+    const div=document.createElement('div');
+    div.className='product-block';
+    div.innerHTML=`
+      <div class="product-block-header">
+        <strong>Product ${i+1}</strong>
+        <button class="btn-mini" onclick="removeProduct(${i})">remove</button>
+      </div>
+      <div class="field"><label>System type</label><input type="text" value="${esc(p.system)}" oninput="updateProduct(${i},'system',this.value)"></div>
+      <div class="field"><label>Manufacturer</label><input type="text" value="${esc(p.mfr)}" oninput="updateProduct(${i},'mfr',this.value)"></div>
+      <div class="field"><label>Model / product</label><input type="text" value="${esc(p.model)}" oninput="updateProduct(${i},'model',this.value)"></div>
+      <div class="row-2">
+        <div class="field"><label>FL approval #</label><input type="text" value="${esc(p.fl)}" oninput="updateProduct(${i},'fl',this.value)"></div>
+        <div class="field"><label>Listed DP basis</label>
+          <select onchange="updateProduct(${i},'loadBasis',this.value)">
+            <option value="ASD" ${basis==='ASD'?'selected':''}>ASD (allowable)</option>
+            <option value="LRFD" ${basis==='LRFD'?'selected':''}>LRFD / Strength</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Approved DP (as listed by mfr)</label><input type="text" value="${esc(p.dp)}" oninput="updateProduct(${i},'dp',this.value)" placeholder="+90/-90 psf"></div>
+    `;
+    list.appendChild(div);
+  });
+}
+function addProduct(){
+  products.push({system:'',mfr:'',model:'',fl:'',dp:'',loadBasis:'ASD'});
+  renderProducts();
+  render();
+}
+function removeProduct(i){
+  products.splice(i,1);
+  renderProducts();
+  render();
+}
+function updateProduct(i,k,v){
+  products[i][k]=v;
+  render();
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ===================================================================
+// DP string parsing + ASD/LRFD conversion
+// ASCE 7-22 produces strength-level (LRFD) wind pressures.
+// FL Product Approvals commonly list DP in ASD (allowable). Conversion
+// factor per ASCE 7 §2.4 / FBC: ASD = 0.6 × LRFD  (i.e. LRFD = ASD / 0.6)
+// ===================================================================
+const ASD_LRFD_FACTOR = 0.6;
+
+// Pull the first two signed numbers out of any DP string. Accepts formats like:
+//   "+90/-90 psf", "+90 / -90", "90/-90 psf", "+90, -90", "DP +90/-90 psf"
+function parseDp(s){
+  if(!s) return null;
+  const nums = String(s).match(/[+-]?\d+(?:\.\d+)?/g);
+  if(!nums || nums.length<2) return null;
+  const pos = parseFloat(nums[0]);
+  const neg = parseFloat(nums[1]);
+  if(isNaN(pos)||isNaN(neg)) return null;
+  // Normalise signs: first number positive, second negative
+  return { pos: Math.abs(pos), neg: -Math.abs(neg) };
+}
+function fmtDp(pos, neg){
+  const p = pos>=0?`+${pos.toFixed(1)}`:pos.toFixed(1);
+  const n = neg>=0?`+${neg.toFixed(1)}`:neg.toFixed(1);
+  return `${p} / ${n} psf`;
+}
+// Returns { listed:{pos,neg,basis}, asd:{pos,neg}, lrfd:{pos,neg} } or null
+function dpEquivalents(dpStr, basis){
+  const parsed = parseDp(dpStr);
+  if(!parsed) return null;
+  let asd, lrfd;
+  if(basis==='LRFD'){
+    lrfd = parsed;
+    asd  = { pos: parsed.pos*ASD_LRFD_FACTOR, neg: parsed.neg*ASD_LRFD_FACTOR };
+  } else { // ASD (default)
+    asd  = parsed;
+    lrfd = { pos: parsed.pos/ASD_LRFD_FACTOR, neg: parsed.neg/ASD_LRFD_FACTOR };
+  }
+  return { listed:{...parsed, basis}, asd, lrfd };
+}
+
+// ===================================================================
+// Image uploads
+// ===================================================================
+function setupImageInput(inputId, previewId, store){
+  document.getElementById(inputId).addEventListener('change', e=>{
+    const f=e.target.files[0];
+    if(!f) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const data=ev.target.result;
+      if(store==='img1') img1Data=data; else img2Data=data;
+      document.getElementById(previewId).innerHTML=`<img src="${data}" alt="preview">`;
+      render();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+// ===================================================================
+// Read all inputs into a single object
+// ===================================================================
+function readForm(){
+  const v=id=>document.getElementById(id).value;
+  return {
+    date: v('f_date'),
+    dept: v('f_dept') || '[Building Department]',
+    deptAddr: v('f_deptAddr') || '[Department Address]',
+    subject: v('f_subject') || 'Wind Pressure Calculations',
+    site: v('f_site') || '[Site address]',
+    client: v('f_client') || '[Client name]',
+    desc: v('f_desc') || 'Pair of exterior entrance doors with fixed storefront/sidelite glazing. Approximate opening configuration and dimensions per submitted client sketch and product information.',
+    V: parseFloat(v('f_V'))||0,
+    risk: v('f_risk'),
+    exp: v('f_exp'),
+    h: parseFloat(v('f_h'))||0,
+    theta: parseFloat(v('f_theta'))||0,
+    A: parseFloat(v('f_A'))||0,
+    Kzt: parseFloat(v('f_Kzt'))||1,
+    Ke: parseFloat(v('f_Ke'))||1,
+    Kd: parseFloat(v('f_Kd'))||0.85,
+    encl: v('f_encl'),
+    zone: v('f_zone'),
+    basis: v('f_basis') || 'ASD',
+    engName: v('f_engName'),
+    engLic: v('f_engLic'),
+    firm: v('f_firm'),
+    coa: v('f_coa'),
+    web: v('f_web'),
+    cap1: v('f_cap1'),
+    cap2: v('f_cap2'),
+    sysCustom: v('f_sysCustom')
+  };
+}
+
+// ===================================================================
+// Format helpers
+// ===================================================================
+function fmtDate(iso){
+  if(!iso) return new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const [y,m,d]=iso.split('-');
+  return new Date(+y, +m-1, +d).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+}
+function ord(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function fmtDateOrdinal(iso){
+  const d = iso ? (()=>{const [y,m,dd]=iso.split('-');return new Date(+y,+m-1,+dd);})() : new Date();
+  const month=d.toLocaleDateString('en-US',{month:'long'});
+  return `${month} ${ord(d.getDate())}, ${d.getFullYear()}`;
+}
+function pstr(x){return (x>=0?'+':'') + x.toFixed(2);}
+function pround(x){return Math.round(x);}
+
+// ===================================================================
+// Footer (reused on every page)
+// ===================================================================
+function footerHtml(d){
+  return `
+    <div class="page-footer">
+      <div class="footer-text">
+        <div class="left">
+          <div>${esc(d.client)}</div>
+          <div>${esc(d.site)}</div>
+          <div>${esc(d.subject)}</div>
+        </div>
+        <div class="right">
+          <div><strong>${esc(d.firm)}</strong></div>
+          <div>Certificate of Authorization No. ${esc(d.coa)}</div>
+          <div>${esc(d.web)}</div>
+        </div>
+      </div>
+      <div class="swoosh"></div>
+    </div>
+  `;
+}
+
+// ===================================================================
+// Live result strip
+// ===================================================================
+function updateLive(d, res){
+  const p=res.primary;
+  const f = d.basis==='ASD' ? 0.6 : 1.0;
+  const b = d.basis==='ASD' ? 'ASD' : 'LRFD';
+  const z4 = `Z4: +${(p.p_pos*f).toFixed(1)} / ${(p.p_negZ4*f).toFixed(1)}`;
+  const z5 = `Z5: +${(p.p_pos*f).toFixed(1)} / ${(p.p_negZ5*f).toFixed(1)}`;
+  document.getElementById('liveResult').innerHTML=
+    `<strong>Kh</strong>=${res.Kh.toFixed(3)}  <strong>qh</strong>=${res.qh.toFixed(2)} psf  ·  ${z4} psf (${b})  ·  ${z5} psf (${b})`;
+}
+
+// ===================================================================
+// MAIN RENDER
+// ===================================================================
+function render(){
+  const d=readForm();
+  const inp={V:d.V, exp:d.exp, h:d.h, theta:d.theta, A:d.A, Kzt:d.Kzt, Ke:d.Ke, Kd:d.Kd, encl:d.encl};
+  if(!inp.V||!inp.h||!inp.A){
+    document.getElementById('letter').innerHTML='<div class="empty-state">Fill V, h, and effective wind area to render the letter.</div>';
+    return;
+  }
+  const res=computeWind(inp);
+  updateLive(d, res);
+
+  // Reporting basis: ASCE 7-22 computes ultimate (strength) pressures.
+  // ASCE 7-22 §2.4.1: W_ASD = 0.6 × W_strength
+  const reportBasis  = d.basis;                       // 'ASD' or 'LRFD'
+  const reportFactor = reportBasis==='ASD' ? 0.6 : 1.0;
+  const basisLabel   = reportBasis==='ASD' ? 'ASD' : 'LRFD / Strength';
+  const basisShort   = reportBasis;                   // 'ASD' or 'LRFD'
+
+  const p=res.primary;
+  const pPos  = pround(p.p_pos    * reportFactor);
+  const pNeg4 = pround(p.p_negZ4  * reportFactor);
+  const pNeg5 = pround(p.p_negZ5  * reportFactor);
+
+  // pick which zone is reported as the headline DP
+  let dpPos, dpNeg, zoneLabel;
+  if(d.zone==='4'){ dpPos=pPos; dpNeg=pNeg4; zoneLabel='Zone 4'; }
+  else if(d.zone==='5'){ dpPos=pPos; dpNeg=pNeg5; zoneLabel='Zone 5'; }
+  else { dpPos=pPos; dpNeg=Math.min(pNeg4,pNeg5); zoneLabel='Worst of Zones 4 & 5'; }
+
+  const dateStr=fmtDateOrdinal(d.date);
+  const F=footerHtml(d);
+
+  // System-type phrase variants used throughout the letter
+  const sysNoun = sysNounPhrase(d.sysCustom);  // e.g. "window" or "entrance door and storefront/sidelite"
+  const sysSing = `${sysNoun} system`;
+  const sysPlur = `${sysNoun} systems`;
+  const sysAsm  = `${sysNoun} assemblies`;
+
+  // -----------------------------
+  // PAGE 1: Header + intro + site photo
+  // -----------------------------
+  const page1=`
+    <div class="letter-page">
+      <div class="header-row">
+        <div class="left">${esc(d.dept)}</div>
+        <div class="right">${dateStr}</div>
+      </div>
+      <div>${esc(d.deptAddr)}</div>
+      <p><strong>RE: ${esc(d.subject)}</strong><br>
+      <strong>${esc(d.site)}</strong></p>
+      <p>To whom it may concern,</p>
+      <p class="indent">This letter certifies that the proposed installation of the ${esc(sysSing)} for the above-referenced project has been evaluated based on a site-specific wind engineering assessment and the submitted Florida Product Approval documentation.</p>
+      <p class="indent">${esc(d.desc)}</p>
+      <p class="indent">The analysis was performed in accordance with the applicable provisions of the Florida Building Code (FBC) 2023 — 8th Edition and ASCE 7-22 wind load requirements. Site-specific parameters were considered to verify that the submitted ${esc(sysAsm)} meet or exceed the required design wind pressures for the project location.</p>
+      ${img1Data
+        ? `<div class="img-frame"><img src="${img1Data}" alt="site"><div class="caption">${esc(d.cap1 || DEFAULT_CAPTION_1)}</div></div>`
+        : `<div class="img-frame placeholder">Site / storefront photo (upload in form, or paste manually after print)</div>`}
+      ${F}
+    </div>
+  `;
+
+  // -----------------------------
+  // PAGE 2: Aerial + Product info
+  // -----------------------------
+  const productsHtml = products.map(p=>{
+    const mfrBasis = p.loadBasis || 'ASD';
+    const eq = dpEquivalents(p.dp, mfrBasis);
+    let dpLines;
+    if(!eq){
+      // Couldn't parse a numeric DP — fall back to showing the raw string the user typed
+      dpLines = `- Approved Design Pressure: ${esc(p.dp)}`;
+    } else if(mfrBasis === reportBasis){
+      // Manufacturer's listed basis matches the letter's reporting basis — no conversion needed
+      const v = (mfrBasis==='ASD') ? eq.asd : eq.lrfd;
+      dpLines = `- Approved Design Pressure (${mfrBasis}): ${fmtDp(v.pos, v.neg)}`;
+    } else {
+      // Bases differ — show both, with the report-basis value flagged as the comparison value
+      const listedVals = (mfrBasis==='ASD') ? eq.asd : eq.lrfd;
+      const convVals   = (reportBasis==='ASD') ? eq.asd : eq.lrfd;
+      const factor     = (reportBasis==='ASD') ? '× 0.6' : '÷ 0.6';
+      dpLines =
+        `- Approved Design Pressure (${mfrBasis}, as listed): ${fmtDp(listedVals.pos, listedVals.neg)}<br>`+
+        `- ${reportBasis} equivalent (${factor}): <strong>${fmtDp(convVals.pos, convVals.neg)}</strong> &nbsp;<em style="font-size:9pt;">— used for comparison</em>`;
+    }
+    return `
+    <p><strong>${esc(p.system||'System')}:</strong><br>
+    - Manufacturer: ${esc(p.mfr)}<br>
+    - Product: ${esc(p.model)}<br>
+    - Florida Product Approval No.: ${esc(p.fl)}<br>
+    ${dpLines}</p>`;
+  }).join('');
+
+  const page2=`
+    <div class="letter-page">
+      ${img2Data
+        ? `<div class="img-frame"><img src="${img2Data}" alt="aerial"><div class="caption">${esc(d.cap2 || DEFAULT_CAPTION_2)}</div></div>`
+        : `<div class="img-frame placeholder">Aerial image (upload in form, or paste manually after print)</div>`}
+      <h3>Product Information</h3>
+      ${productsHtml}
+      <h3>Proposed Configuration</h3>
+      <p>- ${esc(d.desc)}</p>
+      ${F}
+    </div>
+  `;
+
+  // -----------------------------
+  // PAGE 3: Wind Design Parameters + Pressures
+  // -----------------------------
+  const z4Row = `<tr><td>Zone 4 — A=${d.A} sf</td><td>${pstr(p.gcp_pos)}</td><td>${pstr(p.gcp_negZ4)}</td><td>+${(p.p_pos*reportFactor).toFixed(2)}</td><td>${(p.p_negZ4*reportFactor).toFixed(2)}</td></tr>`;
+  const z5Row = `<tr><td>Zone 5 — A=${d.A} sf</td><td>${pstr(p.gcp_pos)}</td><td>${pstr(p.gcp_negZ5)}</td><td>+${(p.p_pos*reportFactor).toFixed(2)}</td><td>${(p.p_negZ5*reportFactor).toFixed(2)}</td></tr>`;
+
+  const basisNoteP3 = reportBasis==='ASD'
+    ? `All wind pressures reported in this letter are presented in <strong>ASD (allowable stress design)</strong> basis. ASCE 7-22 produces ultimate (strength-level) wind pressures; per ASCE 7-22 §2.4.1, these have been multiplied by 0.6 to obtain ASD-level pressures suitable for direct comparison against manufacturer Florida Product Approval design pressures, which are typically listed in ASD.`
+    : `All wind pressures reported in this letter are presented at <strong>LRFD / strength (ultimate)</strong> level as computed directly by ASCE 7-22 (no 0.6 ASD conversion applied). Manufacturer-listed allowable (ASD) design pressures have been divided by 0.6 (per ASCE 7-22 §2.4.1) for direct comparison.`;
+
+  const page3=`
+    <div class="letter-page">
+      <h3>Wind Design Parameters</h3>
+      <p>The following assumptions were used to determine the required design pressures:</p>
+      <ul style="list-style:none;padding-left:0.4in;margin:0.3rem 0 0.7rem;">
+        <li>- Risk Category: ${esc(d.risk)}</li>
+        <li>- Design Wind Speed (V<sub>ult</sub>): ${d.V} mph</li>
+        <li>- Exposure Category: ${esc(d.exp)}</li>
+        <li>- Mean Roof Height (h): ${d.h} ft</li>
+        <li>- Roof Slope (θ): ${d.theta}°${d.theta<=10?' (≤10°, 10% wall reduction applied per Fig. 30.3-1)':''}</li>
+        <li>- Topographic Factor (K<sub>zt</sub>): ${d.Kzt}</li>
+        <li>- Enclosure Classification: ${d.encl.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())} (GC<sub>pi</sub>=±${res.Gi})</li>
+        <li>- Design Methodology: Components and Cladding, ASCE 7-22 Ch. 30 Pt. 1</li>
+        <li>- Applicable Wall Zone: ${zoneLabel}</li>
+        <li>- Effective Wind Area: ${d.A} sq ft</li>
+        <li>- Pressure Reporting Basis: <strong>${basisLabel}</strong></li>
+      </ul>
+      <table class="calc-table">
+        <thead><tr><th>Zone</th><th>GC<sub>p</sub> pos</th><th>GC<sub>p</sub> neg</th><th>P<sub>max</sub> (psf, ${basisShort})</th><th>P<sub>min</sub> (psf, ${basisShort})</th></tr></thead>
+        <tbody>${z4Row}${z5Row}</tbody>
+      </table>
+      <h3>Required Design Pressures</h3>
+      <p>Based on the site-specific wind analysis, the required design pressures (reported in <strong>${basisShort}</strong> basis) for the proposed ${esc(sysSing)} are:</p>
+      <div class="pressure-summary">
+        <div class="row headline"><span>Positive Design Pressure (${zoneLabel}, ${basisShort}):</span><span>+${dpPos} psf</span></div>
+        <div class="row headline"><span>Negative Design Pressure (${zoneLabel}, ${basisShort}):</span><span>${dpNeg} psf</span></div>
+      </div>
+      <p>${basisNoteP3}</p>
+      <p>The submitted product approval documentation indicates that the proposed ${esc(sysAsm)} are rated for pressures that meet or exceed the required site-specific design pressures, provided that the systems are installed in strict accordance with the applicable Florida Product Approval drawings, limitations, anchorage requirements, glazing requirements, and manufacturer installation instructions.</p>
+      ${F}
+    </div>
+  `;
+
+  // -----------------------------
+  // PAGE 4: Approval + Limitations
+  // -----------------------------
+  const page4=`
+    <div class="letter-page">
+      <h3>Engineering Approval Summary</h3>
+      <p>Based on the submitted product approvals and wind pressure evaluation, the proposed ${esc(sysSing)} is acceptable for use at the above-referenced project, subject to the following conditions:</p>
+      <ol>
+        <li>The installed ${esc(sysSing)} shall match the approved product configuration, dimensions, glazing, framing, anchorage, and limitations shown in the applicable Florida Product Approval documents.</li>
+        <li>Installation shall be performed strictly in accordance with the approved manufacturer details, anchorage schedules, substrate requirements, and all applicable code requirements.</li>
+        <li>The contractor shall verify all field dimensions, substrate conditions, and installation requirements prior to construction.</li>
+        <li>This engineering certification is limited to the wind pressure review and approval of the submitted ${esc(sysPlur)} only.</li>
+      </ol>
+      <h3>Limitations</h3>
+      <ul>
+        <li>This letter does not include structural engineering design or certification of the surrounding building frame, rough opening, header, jambs, columns, beams, walls, or supporting structure.</li>
+        <li>This letter does not certify the adequacy of the existing structural frame opening or surrounding construction. The existing structure and rough opening shall be verified by others to be suitable to receive the approved ${esc(sysSing)}.</li>
+        <li>This approval is not intended to replace the contractor's responsibility to install the system in accordance with the approved product approval, manufacturer requirements, permit documents, and applicable building code provisions.</li>
+      </ul>
+      ${F}
+    </div>
+  `;
+
+  // -----------------------------
+  // PAGE 5: Documentation attached + sign-off
+  // -----------------------------
+  const docItems = products.map((p,i)=>`<li>Florida Product Approval documentation for ${esc(p.mfr)} ${esc(p.model)}, ${esc(p.fl)}</li>`).join('');
+  const page5=`
+    <div class="letter-page">
+      <h3>Engineering Documentation Attached</h3>
+      <p>Attached to this letter are the following:</p>
+      <ol>
+        <li>Site-specific wind pressure calculations</li>
+        ${docItems}
+        <li>Submitted project sketch / opening configuration, as applicable</li>
+      </ol>
+      <p>These documents provide verification that the submitted ${esc(sysPlur)}, when installed in strict accordance with the applicable product approval documents and manufacturer requirements, comply with the required wind pressure criteria for this project.</p>
+      <p>Should you have any questions or require additional information, please do not hesitate to contact our office.</p>
+      <div class="signature-block">
+        <p>Sincerely,</p>
+        <div class="stamp-placeholder">PE Stamp &amp; Signature<br>(apply manually)</div>
+        <p style="margin-top:0.5rem;">${esc(d.engName)}<br>FL License No. ${esc(d.engLic)}<br>${dateStr}</p>
+      </div>
+      ${F}
+    </div>
+  `;
+
+  // -----------------------------
+  // PAGE 6: Exhibit 1 cover
+  // -----------------------------
+  const page6=`
+    <div class="letter-page">
+      <div class="exhibit-cover">
+        <h2>Exhibit 1 — Wind Calculations</h2>
+      </div>
+      ${F}
+    </div>
+  `;
+
+  // -----------------------------
+  // PAGES 7a + 7b: Detailed wind calc breakdown (split to fit single sheets)
+  // 7a: Header + Steps 1–4 (through q_h)
+  // 7b: Steps 5–7 + pressure table
+  // -----------------------------
+  const EC=EXPOSURE[d.exp];
+  const zeff=Math.max(d.h, EC.zmin);
+  const tableRows = res.table.map(r=>{
+    return `<tr>
+      <td>${r.A}</td>
+      <td>${pstr(r.gcp_pos)}</td>
+      <td>${pstr(r.gcp_negZ4)}</td>
+      <td>${pstr(r.gcp_negZ5)}</td>
+      <td>+${(r.p_pos*reportFactor).toFixed(2)}</td>
+      <td>${(r.p_negZ4*reportFactor).toFixed(2)}</td>
+      <td>${(r.p_negZ5*reportFactor).toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+
+  // Conditional Step 7 — only when reporting in ASD
+  const step7 = reportBasis==='ASD' ? `
+      <h3>7. Conversion to ASD Reporting Basis (ASCE 7-22 §2.4.1)</h3>
+      <div class="calc-step">
+        <span class="label">W<sub>ASD</sub> = 0.6 × W<sub>strength</sub></span><br>
+        ASCE 7-22 produces ultimate (strength-level) wind pressures. Per ASCE 7-22 §2.4.1, the 0.6 load factor is applied to convert to allowable stress design (ASD) for direct comparison against manufacturer Florida Product Approval design pressures, which are typically listed in ASD basis.<br>
+        <em>All pressures in the table below are reported in <strong>ASD</strong> basis (0.6 × strength).</em>
+      </div>
+  ` : `
+      <h3>7. Reporting Basis</h3>
+      <div class="calc-step">
+        Pressures reported at <strong>LRFD / strength (ultimate)</strong> level as computed directly by ASCE 7-22. No 0.6 ASD conversion applied. Where manufacturer design pressures are listed in ASD, they have been divided by 0.6 (per ASCE 7-22 §2.4.1) elsewhere in this letter for direct comparison.
+      </div>
+  `;
+
+  const page7a=`
+    <div class="letter-page calc-detail">
+      <h2 style="margin-top:0;">Wind Calculation Detail</h2>
+      <p style="font-family:var(--font-mono);font-size:9.5pt;">
+        <strong>Project:</strong> ${esc(d.site)}<br>
+        <strong>Prepared by:</strong> ${esc(d.firm)} · Cert. of Authorization No. ${esc(d.coa)}<br>
+        <strong>Engineer of Record:</strong> ${esc(d.engName)}, FL License ${esc(d.engLic)}<br>
+        <strong>Date:</strong> ${dateStr}<br>
+        <strong>Reference:</strong> ASCE 7-22, Components &amp; Cladding (Ch. 30 Pt. 1)<br>
+        <strong>Reporting Basis:</strong> ${basisLabel}
+      </p>
+
+      <h3>1. Input Parameters</h3>
+      <div class="calc-step">
+        V = ${d.V} mph &nbsp;|&nbsp; Exposure = ${d.exp} &nbsp;|&nbsp; Risk Cat = ${d.risk}<br>
+        h = ${d.h} ft &nbsp;|&nbsp; θ = ${d.theta}° &nbsp;|&nbsp; Kzt = ${d.Kzt} &nbsp;|&nbsp; Ke = ${d.Ke} &nbsp;|&nbsp; Kd = ${d.Kd}<br>
+        Enclosure = ${d.encl} → GCpi = ±${res.Gi}
+      </div>
+
+      <h3>2. Exposure Constants (ASCE 7-22 Table 26.11-1)</h3>
+      <div class="calc-step">
+        Exposure ${d.exp}: α = ${EC.alpha}, z<sub>g</sub> = ${EC.zg} ft, z<sub>min</sub> = ${EC.zmin} ft
+      </div>
+
+      <h3>3. Velocity Pressure Coefficient (ASCE 7-22 Eq. 26.10-1, Note 1)</h3>
+      <div class="calc-step">
+        <span class="label">K<sub>h</sub> = 2.41 × (z<sub>eff</sub> / z<sub>g</sub>)<sup>2/α</sup></span><br>
+        z<sub>eff</sub> = max(${d.h}, ${EC.zmin}) = ${zeff} ft<br>
+        K<sub>h</sub> = 2.41 × (${zeff} / ${EC.zg})<sup>2/${EC.alpha}</sup> = <strong>${res.Kh.toFixed(4)}</strong>
+      </div>
+
+      <h3>4. Velocity Pressure (ASCE 7-22 Eq. 26.10-1; K<sub>d</sub> NOT included)</h3>
+      <div class="calc-step">
+        <span class="label">q<sub>h</sub> = 0.00256 × K<sub>h</sub> × K<sub>zt</sub> × K<sub>e</sub> × V²</span><br>
+        q<sub>h</sub> = 0.00256 × ${res.Kh.toFixed(4)} × ${d.Kzt} × ${d.Ke} × ${d.V}² = <strong>${res.qh.toFixed(2)} psf</strong> (strength)
+      </div>
+
+      ${F}
+    </div>
+  `;
+
+  const page7b=`
+    <div class="letter-page calc-detail">
+      <h2 style="margin-top:0;">Wind Calculation Detail <span style="font-size:11pt;font-weight:400;color:#666;">(continued)</span></h2>
+
+      <h3>5. External Pressure Coefficients GC<sub>p</sub> (Fig. 30.3-1, log-interp by EWA)</h3>
+      <div class="calc-step">
+        Base values (A=10 sf → A=500 sf):<br>
+        &nbsp;&nbsp;Z4 &amp; Z5 pos:  +1.0 → +0.7<br>
+        &nbsp;&nbsp;Z4 neg:         −1.1 → −0.8<br>
+        &nbsp;&nbsp;Z5 neg:         −1.4 → −0.8<br>
+        ${d.theta<=10
+          ? `<em>θ = ${d.theta}° ≤ 10° → wall GC<sub>p</sub> values reduced by 10% per Fig. 30.3-1 footnote.</em>`
+          : `<em>θ = ${d.theta}° > 10° → no 10% wall reduction applied.</em>`}
+      </div>
+
+      <h3>6. Net Design Pressures (ASCE 7-22 Eq. 30.3-1)</h3>
+      <div class="calc-step">
+        <span class="label">p<sub>strength</sub> = q<sub>h</sub> × K<sub>d</sub> × (GC<sub>p</sub> − GC<sub>pi</sub>)</span><br>
+        Worst-case sign of GC<sub>pi</sub> selected per zone to maximize magnitude.
+      </div>
+
+      ${step7}
+
+      <table class="calc-table">
+        <thead><tr>
+          <th>A (sf)</th>
+          <th>GC<sub>p</sub> pos</th>
+          <th>GC<sub>p</sub> Z4 neg</th>
+          <th>GC<sub>p</sub> Z5 neg</th>
+          <th>P pos (psf, ${basisShort})</th>
+          <th>P Z4 neg (psf, ${basisShort})</th>
+          <th>P Z5 neg (psf, ${basisShort})</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+
+      ${F}
+    </div>
+  `;
+
+  document.getElementById('letter').innerHTML = page1+page2+page3+page4+page5+page6+page7a+page7b;
+}
+
+// ===================================================================
+// Wire up
+// ===================================================================
+function resetForm(){
+  if(!confirm('Clear all fields?')) return;
+  document.querySelectorAll('.form-panel input,.form-panel select,.form-panel textarea').forEach(el=>{
+    if(el.type==='file'){ el.value=''; }
+    else if(el.type==='checkbox'){
+      // Reset system-type checkboxes to default (doors + storefront)
+      el.checked = (el.id==='sys_entrance_doors' || el.id==='sys_storefront');
+    }
+    else if(el.id==='f_V')   el.value='160';
+    else if(el.id==='f_h')   el.value='30';
+    else if(el.id==='f_theta') el.value='5';
+    else if(el.id==='f_A')   el.value='50';
+    else if(el.id==='f_Kzt') el.value='1.0';
+    else if(el.id==='f_Ke')  el.value='1.0';
+    else if(el.id==='f_Kd')  el.value='0.85';
+    else if(el.id==='f_basis')   el.value='ASD';
+    else el.value='';
+  });
+  img1Data=null; img2Data=null;
+  document.getElementById('img1Preview').textContent='No image. Will show placeholder.';
+  document.getElementById('img2Preview').textContent='No image. Will show placeholder.';
+  document.getElementById('f_date').valueAsDate=new Date();
+  render();
+}
+
+// init
+document.getElementById('f_date').valueAsDate=new Date();
+renderProducts();
+setupImageInput('f_img1','img1Preview','img1');
+setupImageInput('f_img2','img2Preview','img2');
+document.querySelectorAll('.form-panel input,.form-panel select,.form-panel textarea').forEach(el=>{
+  el.addEventListener('input', render);
+  el.addEventListener('change', render);
+});
+render();
+</script>
+</body>
+</html>
