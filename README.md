@@ -30,7 +30,7 @@ You fill in the project info on the left, the letter renders live on the right, 
 - Any structure outside Florida or any jurisdiction not using FBC 2023 / ASCE 7-22
 - Anything requiring an engineering review more substantive than a fenestration product approval comparison
 
-If your project falls outside the above scope, **do not use this tool**. Use a full structural analysis package and have a licensed PE perform the engineering directly. See [Need a sealed letter?](https://windcalculations.com/contact) below.
+If your project falls outside the above scope, **do not use this tool**. Use a full structural analysis package and have a licensed PE perform the engineering directly. See [Need a sealed letter?](# Need a sealed letter?) below.
 
 ---
 
